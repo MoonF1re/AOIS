@@ -79,5 +79,13 @@ class MyTestCase(unittest.TestCase):
         user_input = "(a & b)"
         self.assertEqual(replace_symbols(user_input), "(a  and  b)")
 
+    def test_generate_truth_table_simple(self):
+        expression = "(a & b)"
+        expected_terms_num = 2
+        expected_results = [((0, 0), False), ((0, 1), False), ((1, 0), False), ((1, 1), True)]
+        terms_num, results = generate_truth_table(expression)
+        self.assertEqual(terms_num, expected_terms_num)
+        self.assertEqual(results, expected_results)
+
 if __name__ == '__main__':
     unittest.main()
