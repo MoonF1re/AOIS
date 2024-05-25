@@ -38,6 +38,18 @@ class MyTestCase(unittest.TestCase):
         indexed_form = ''.join(str(int(result)) for _, result in tt_entries)
         self.assertEqual(indexed_form, "00010101")
 
+    def test_index_form3(self):
+        user_input = "(a & b)"
+        terms_num, tt_entries = generate_truth_table(user_input)
+        indexed_form = ''.join(str(int(result)) for _, result in tt_entries)
+        self.assertEqual(indexed_form_to_decimal(indexed_form), 1)
+
+    def test_index_form4(self):
+        user_input = "(a | b) & c"
+        terms_num, tt_entries = generate_truth_table(user_input)
+        indexed_form = ''.join(str(int(result)) for _, result in tt_entries)
+        self.assertEqual(indexed_form_to_decimal(indexed_form), 21)
+
     def test_sdnf_index(self):
         user_input = "(a -> b) & !c"
         terms_num, tt_entries = generate_truth_table(user_input)
@@ -62,6 +74,10 @@ class MyTestCase(unittest.TestCase):
         terms_num, tt_entries = generate_truth_table(user_input)
         sdnf_indexes, cnf_indexes = build_index_forms(tt_entries)
         self.assertEqual(cnf_indexes, [4])
+
+    def test_replace(self):
+        user_input = "(a & b)"
+        self.assertEqual(replace_symbols(user_input), "(a  and  b)")
 
 if __name__ == '__main__':
     unittest.main()
