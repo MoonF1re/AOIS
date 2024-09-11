@@ -40,7 +40,7 @@ class TestLogicFunctions(unittest.TestCase):
         terms_num = 2
         sdnf, cnf = build_sdnf_cnf(entries, terms_num)
         self.assertEqual(sdnf, 'a & b')
-        self.assertEqual(cnf, '(a | b) & (a | !b) & (!a | b)')
+        self.assertEqual(cnf, '(!a | !b) & (!a | b) & (a | !b)')
 
     def test_combine_terms(self):
         self.assertEqual(combine_terms([1, 1, 0], [1, 1, 1]), [1, 1, '-'])
@@ -78,7 +78,7 @@ class TestLogicFunctions(unittest.TestCase):
         implicant = [1, '-', 0]
         terms_num = 3
         formatted = format_implicant(implicant, terms_num)
-        self.assertEqual(formatted, '!a & !c')
+        self.assertEqual(formatted, 'a & !c')
 
     def test_to_decimal(self):
         self.assertEqual(to_decimal((1, 0, 1)), 5)

@@ -1,6 +1,4 @@
 import itertools
-
-
 def replace_symbols(logic_function):
     replacements = {
         '!': ' not ',
@@ -50,10 +48,13 @@ def build_sdnf_cnf(entries, terms_num, variables='abcde'):
             cnf.append(combo)
     sdnf_expr = ' | '.join(
         ' & '.join(f'{var}' if val else f'!{var}' for var, val in zip(variables[:terms_num], combo)) for combo in sdnf)
+
     cnf_expr = ' & '.join(
-        f"({' | '.join(f'!{var}' if val else f'{var}' for var, val in zip(variables[:terms_num], combo))})" for combo in
+        f"({' | '.join(f'{var}' if val else f'!{var}' for var, val in zip(variables[:terms_num], combo))})" for combo in
         cnf)
+
     return sdnf_expr, cnf_expr
+
 
 
 def combine_terms(term1, term2):
@@ -97,20 +98,37 @@ def essential_prime_implicants(prime_implicants, minterms):
 
 
 def quine_mccluskey(entries, terms_num, is_sdnf=True):
+    # Выбираем либо набор, где результат функции истинен (СДНФ), либо где ложен (СКНФ)
     minterms = [entry[0] for entry in entries if entry[1] == is_sdnf]
+
     print(f"\nНачальные минтермы {'СДНФ' if is_sdnf else 'СКНФ'}: {minterms}")
+
     prime_implicants = find_prime_implicants(minterms)
     print(f"Простые импликанты: {prime_implicants}")
+
     essential_implicants = essential_prime_implicants(prime_implicants, minterms)
-    remaining_minterms = [term for term in minterms if not any(
-        all((bit == '-' or bit == t_bit) for bit, t_bit in zip(implicant, term)) for implicant in essential_implicants)]
+
+    remaining_minterms = [
+        term for term in minterms if not any(
+            all((bit == '-' or bit == t_bit) for bit, t_bit in zip(implicant, term))
+            for implicant in essential_implicants
+        )
+    ]
+
     return essential_implicants, remaining_minterms
 
 
 def format_implicant(implicant, terms_num, variables='abcde', is_sdnf=True):
+    # Логика для минимизации СДНФ или СКНФ
     logic = ' & ' if is_sdnf else ' | '
+
+    # Если это СДНФ, переменные используются без изменения
+    # Если это СКНФ, нужно обратить переменные (!var)
     formatted = logic.join(
-        f'{var}' if bit == '1' else f'!{var}' for var, bit in zip(variables[:terms_num], implicant) if bit != '-')
+        f'{var}' if (bit == 1 and is_sdnf) or (bit == 0 and not is_sdnf)
+        else f'!{var}' for var, bit in zip(variables[:terms_num], implicant) if bit != '-'
+    )
+
     return formatted
 
 
@@ -182,10 +200,51 @@ def karno_minimize(entries, terms_num, is_sdnf=True):
     kmap = create_kmap(entries, terms_num, is_sdnf)
     print_kmap(kmap)
     return True
-    # Here should be the implementation of minimization using the Karnaugh map.
+
+def test_examples(user_input):
+    print(f"====================== {user_input} ===================")
+    terms_num, entries = generate_truth_table(user_input)
+
+    print_truth_table(entries, terms_num)
+
+    sdnf, cnf = build_sdnf_cnf(entries, terms_num)
+    print(f"СДНФ: {sdnf}\nСКНФ: {cnf}\n")
+
+    # Calculation Method
+    print("Минимизация СДНФ расчетным методом:")
+    essential_implicants, remaining_minterms = quine_mccluskey(entries, terms_num, is_sdnf=True)
+    print_result(essential_implicants, terms_num, is_sdnf=True)
+
+    print("Минимизация СКНФ расчетным методом:")
+    essential_implicants, remaining_minterms = quine_mccluskey(entries, terms_num, is_sdnf=False)
+    print_result(essential_implicants, terms_num, is_sdnf=False)
+
+    # Calculation-Table Method
+    print("Минимизация СДНФ расчетно-табличным методом:")
+    essential_implicants, remaining_minterms, chart = quine_mccluskey_with_chart(entries, terms_num, is_sdnf=True)
+    print_result(essential_implicants, terms_num, is_sdnf=True)
+    print_prime_implicant_chart(chart)
+
+    print("Минимизация СКНФ расчетно-табличным методом:")
+    essential_implicants, remaining_minterms, chart = quine_mccluskey_with_chart(entries, terms_num, is_sdnf=False)
+    print_result(essential_implicants, terms_num, is_sdnf=False)
+    print_prime_implicant_chart(chart)
+
+    # Karnaugh Map Method
+    print("Минимизация СДНФ табличным методом (карта Карно):")
+    karno_minimize(entries, terms_num, is_sdnf=True)
+
+    print("Минимизация СКНФ табличным методом (карта Карно):")
+    karno_minimize(entries, terms_num, is_sdnf=False)
+
+test_examples("(a & b) | c")
+test_examples("!a & (b | c)")
+test_examples("a -> (b & c)")
+test_examples("(a | !b) & c")
+test_examples("(a & b) | (c -> d)")
 
 
-# Full program example usage
+# # Full program example usage
 # if __name__ == "__main__":
 #     user_input = input("Введите логическую функцию с использованием a, b, c, d, e и операций &, |, !, ->, ~: ")
 #     terms_num, entries = generate_truth_table(user_input)
@@ -221,4 +280,3 @@ def karno_minimize(entries, terms_num, is_sdnf=True):
 #
 # print("Минимизация СКНФ табличным методом (карта Карно):")
 # karno_minimize(entries, terms_num, is_sdnf=False)
-
